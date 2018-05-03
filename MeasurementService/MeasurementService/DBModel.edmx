@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="ProjectDatabaseEntitiesModel.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2012" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityContainer Name="ProjectDatabaseEntitiesModelStoreContainer">
+    <EntitySet Name="LOCATIONS" EntityType="ProjectDatabaseEntitiesModel.Store.LOCATIONS" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="MEASUREMENTS" EntityType="ProjectDatabaseEntitiesModel.Store.MEASUREMENTS" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="STATIONS" EntityType="ProjectDatabaseEntitiesModel.Store.STATIONS" store:Type="Tables" Schema="dbo" />
+    <AssociationSet Name="FK_LOCATIONSTATION" Association="ProjectDatabaseEntitiesModel.Store.FK_LOCATIONSTATION">
+      <End Role="LOCATIONS" EntitySet="LOCATIONS" />
+      <End Role="STATIONS" EntitySet="STATIONS" />
+    </AssociationSet>
+    <AssociationSet Name="FK_STATIONMEASUREMENT" Association="ProjectDatabaseEntitiesModel.Store.FK_STATIONMEASUREMENT">
+      <End Role="STATIONS" EntitySet="STATIONS" />
+      <End Role="MEASUREMENTS" EntitySet="MEASUREMENTS" />
+    </AssociationSet>
+  </EntityContainer>
+  <EntityType Name="LOCATIONS">
+    <Key>
+      <PropertyRef Name="ID" />
+    </Key>
+    <Property Name="ID" Type="int" Nullable="false" />
+    <Property Name="NAME" Type="nvarchar" Nullable="false" MaxLength="20" />
+  </EntityType>
+  <EntityType Name="MEASUREMENTS">
+    <Key>
+      <PropertyRef Name="ID" />
+    </Key>
+    <Property Name="ID" Type="int" Nullable="false" />
+    <Property Name="VALUE" Type="decimal" Nullable="false" Precision="15" Scale="0" />
+    <Property Name="TIME" Type="datetime" Nullable="false" />
+    <Property Name="TYPE" Type="nvarchar" Nullable="false" MaxLength="20" />
+    <Property Name="STATIONID" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="STATIONS">
+    <Key>
+      <PropertyRef Name="ID" />
+    </Key>
+    <Property Name="ID" Type="int" Nullable="false" />
+    <Property Name="NAME" Type="nvarchar" Nullable="false" MaxLength="20" />
+    <Property Name="LOCATIONID" Type="int" Nullable="false" />
+  </EntityType>
+  <Association Name="FK_LOCATIONSTATION">
+    <End Role="LOCATIONS" Type="ProjectDatabaseEntitiesModel.Store.LOCATIONS" Multiplicity="1" />
+    <End Role="STATIONS" Type="ProjectDatabaseEntitiesModel.Store.STATIONS" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="LOCATIONS">
+        <PropertyRef Name="ID" />
+      </Principal>
+      <Dependent Role="STATIONS">
+        <PropertyRef Name="LOCATIONID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_STATIONMEASUREMENT">
+    <End Role="STATIONS" Type="ProjectDatabaseEntitiesModel.Store.STATIONS" Multiplicity="1" />
+    <End Role="MEASUREMENTS" Type="ProjectDatabaseEntitiesModel.Store.MEASUREMENTS" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="STATIONS">
+        <PropertyRef Name="ID" />
+      </Principal>
+      <Dependent Role="MEASUREMENTS">
+        <PropertyRef Name="STATIONID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+</Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="ProjectDatabaseEntitiesModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="LOCATION">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" />
+          <Property Name="NAME" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="STATIONS" Relationship="Self.FK_LOCATIONSTATION" FromRole="LOCATIONS" ToRole="STATIONS" />
+        </EntityType>
+        <EntityType Name="MEASUREMENT">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" />
+          <Property Name="VALUE" Type="Decimal" Precision="15" Scale="0" Nullable="false" />
+          <Property Name="TIME" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="TYPE" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="STATIONID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="STATION" Relationship="Self.FK_STATIONMEASUREMENT" FromRole="MEASUREMENTS" ToRole="STATIONS" />
+        </EntityType>
+        <EntityType Name="STATION">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" />
+          <Property Name="NAME" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="LOCATIONID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="LOCATION" Relationship="Self.FK_LOCATIONSTATION" FromRole="STATIONS" ToRole="LOCATIONS" />
+          <NavigationProperty Name="MEASUREMENTS" Relationship="Self.FK_STATIONMEASUREMENT" FromRole="STATIONS" ToRole="MEASUREMENTS" />
+        </EntityType>
+        <Association Name="FK_LOCATIONSTATION">
+          <End Role="LOCATIONS" Type="Self.LOCATION" Multiplicity="1" />
+          <End Role="STATIONS" Type="Self.STATION" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="LOCATIONS">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="STATIONS">
+              <PropertyRef Name="LOCATIONID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_STATIONMEASUREMENT">
+          <End Role="STATIONS" Type="Self.STATION" Multiplicity="1" />
+          <End Role="MEASUREMENTS" Type="Self.MEASUREMENT" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="STATIONS">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="MEASUREMENTS">
+              <PropertyRef Name="STATIONID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="ProjectDatabaseMeasureEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="LOCATIONS" EntityType="Self.LOCATION" />
+          <EntitySet Name="MEASUREMENTS" EntityType="Self.MEASUREMENT" />
+          <EntitySet Name="STATIONS" EntityType="Self.STATION" />
+          <AssociationSet Name="FK_LOCATIONSTATION" Association="Self.FK_LOCATIONSTATION">
+            <End Role="LOCATIONS" EntitySet="LOCATIONS" />
+            <End Role="STATIONS" EntitySet="STATIONS" />
+          </AssociationSet>
+          <AssociationSet Name="FK_STATIONMEASUREMENT" Association="Self.FK_STATIONMEASUREMENT">
+            <End Role="STATIONS" EntitySet="STATIONS" />
+            <End Role="MEASUREMENTS" EntitySet="MEASUREMENTS" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+    <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="ProjectDatabaseEntitiesModelStoreContainer" CdmEntityContainer="ProjectDatabaseMeasureEntities">
+    <EntitySetMapping Name="LOCATIONS">
+      <EntityTypeMapping TypeName="IsTypeOf(ProjectDatabaseEntitiesModel.LOCATION)">
+        <MappingFragment StoreEntitySet="LOCATIONS">
+          <ScalarProperty Name="ID" ColumnName="ID" />
+          <ScalarProperty Name="NAME" ColumnName="NAME" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="MEASUREMENTS">
+      <EntityTypeMapping TypeName="IsTypeOf(ProjectDatabaseEntitiesModel.MEASUREMENT)">
+        <MappingFragment StoreEntitySet="MEASUREMENTS">
+          <ScalarProperty Name="ID" ColumnName="ID" />
+          <ScalarProperty Name="VALUE" ColumnName="VALUE" />
+          <ScalarProperty Name="TIME" ColumnName="TIME" />
+          <ScalarProperty Name="TYPE" ColumnName="TYPE" />
+          <ScalarProperty Name="STATIONID" ColumnName="STATIONID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="STATIONS">
+      <EntityTypeMapping TypeName="IsTypeOf(ProjectDatabaseEntitiesModel.STATION)">
+        <MappingFragment StoreEntitySet="STATIONS">
+          <ScalarProperty Name="ID" ColumnName="ID" />
+          <ScalarProperty Name="NAME" ColumnName="NAME" />
+          <ScalarProperty Name="LOCATIONID" ColumnName="LOCATIONID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping></edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="true" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="False" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
