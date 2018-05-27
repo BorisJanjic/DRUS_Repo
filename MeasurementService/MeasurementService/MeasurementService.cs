@@ -72,101 +72,51 @@ namespace MeasurementService
 
         public string GetAllMeasurementsOfMeasurer(int measurerId, DateTime fromTime, DateTime toTime, int type)
         {
-            string typeStr = "";
+            string typeStr = TypeToString(type);
             List<MEASUREMENT> measurements = new List<MEASUREMENT>();
-            switch(type)
-            {
-                case 1:
-                    typeStr = "Humidity";
-                    measurements = (from m in databaseEntities.MEASUREMENTS
-                                    where m.STATION.ID == measurerId &&
-                                    m.TIME > fromTime && m.TIME < toTime &&
-                                    m.TYPE.Equals(typeStr)
-                                    select m).ToList<MEASUREMENT>();
-                    break;
-                case 2:
-                    typeStr = "Temperature";
-                    measurements = (from m in databaseEntities.MEASUREMENTS
-                                    where m.STATION.ID == measurerId &&
-                                    m.TIME > fromTime && m.TIME < toTime &&
-                                    m.TYPE.Equals(typeStr)
-                                    select m).ToList<MEASUREMENT>();
-                    break;
-                default:
-                    measurements = (from m in databaseEntities.MEASUREMENTS
-                                    where m.STATION.ID == measurerId &&
-                                    m.TIME > fromTime && m.TIME < toTime
-                                    select m).ToList<MEASUREMENT>();
-                    break;
-            }
-            string retVal = "";
+           
+            measurements = (from m in databaseEntities.MEASUREMENTS
+                            where m.STATION.ID == measurerId &&
+                            m.TIME > fromTime && m.TIME < toTime
+                            select m).ToList<MEASUREMENT>();
 
+            string retVal = "";
             foreach (MEASUREMENT m in measurements)
             {
-                retVal += "[Id: " + m.ID + " Type: " + m.TYPE + " Value: " + m.VALUE + " ]\n";
+                if (m.TYPE == typeStr)
+                {
+                    retVal += "[Id: " + m.ID + " Type: " + m.TYPE + " Value: " + m.VALUE + " ]\n";
+                }
             }
             return retVal;
+           
         }
         
         public string GetAllMomentsOfLimitValues(int measurerId, int type, int limitType, double limit)
         {
-            string typeStr = "";
+            string typeStr = TypeToString(type);
             string retVal = "";
             List<MEASUREMENT> measurements = new List<MEASUREMENT>();
-            if(type==1)
-            {
-                typeStr = "Humidity";
-            }
-            else if(type ==2)
-            {
-                typeStr = "Temperature";
-            }
-            //Low Limit
-            if(limitType==1)
-            {
-                measurements = databaseEntities.MEASUREMENTS.Where(m => m.STATION.ID == measurerId
-                                                && m.TYPE.Equals(typeStr) 
-                                                && (double)m.VALUE < limit).ToList();
-            }
-            //High limit
-            else if(limitType==2)
-            {
-                measurements = databaseEntities.MEASUREMENTS.Where(m => m.STATION.ID == measurerId
-                                               && m.TYPE.Equals(typeStr)
-                                               && (double)m.VALUE > limit).ToList();
-            }
+            measurements = databaseEntities.MEASUREMENTS.Where(m => m.STATION.ID == measurerId
+                                               && m.TYPE.Equals(typeStr)).ToList();
+            measurements = GetLimits(measurements, limitType, limit);
+           
             retVal += "All moments of limit values for specific measurer: \n";
             foreach (MEASUREMENT m in measurements)
                 retVal += "[Id: " + m.ID + " Type: " + m.TYPE + " Value: " + m.VALUE + " Time: " +m.TIME +" ]\n";
             return retVal;
-        }
-        
+        } 
+      
         public string GetAllMomentsOfLimitValuesOnSpecificLocation(string locationName, int type, int limitType, double limit)
         {
-            string typeStr = "";
+            string typeStr = TypeToString(type);
             string retVal = "";
             List<MEASUREMENT> measurements = new List<MEASUREMENT>();
-            if (type == 1)
-            {
-                typeStr = "Humidity";
-            }
-            else if (type == 2)
-            {
-                typeStr = "Temperature";
-            }
-            //Low Limit
-            if (limitType == 1)
-            {
-                measurements = databaseEntities.MEASUREMENTS.Where(m => m.STATION.LOCATION.NAME.Equals(locationName)                                                && m.TYPE.Equals(typeStr)
-                                                && (double)m.VALUE < limit).ToList();
-            }
-            //High limit
-            else if (limitType == 2)
-            {
-                measurements = databaseEntities.MEASUREMENTS.Where(m => m.STATION.LOCATION.NAME.Equals(locationName)
-                                               && m.TYPE.Equals(typeStr)
-                                               && (double)m.VALUE > limit).ToList();
-            }
+            measurements = databaseEntities.MEASUREMENTS.Where(m => m.STATION.LOCATION.NAME.Equals(locationName)
+                                                && m.TYPE.Equals(typeStr)).ToList();
+
+            measurements = GetLimits(measurements, limitType, limit);
+         
             retVal += "All moments of limit values on specific location:\n";
             foreach (MEASUREMENT m in measurements)
                 retVal += "[Id: " + m.ID + " Type: " + m.TYPE + " Value: " + m.VALUE + " Time: " + m.TIME + " ]\n";
@@ -175,17 +125,10 @@ namespace MeasurementService
 
         public string GetAverageOnLocation(string locationName, int type, DateTime fromDate, DateTime dateUntil)
         {
-            string typeStr = "";
+            string typeStr = TypeToString(type);
             string retVal = "";
             List<MEASUREMENT> measurements = new List<MEASUREMENT>();
-            if (type == 1)
-            {
-                typeStr = "Humidity";
-            }
-            else if (type == 2)
-            {
-                typeStr = "Temperature";
-            }
+           
             decimal averageResult = databaseEntities.MEASUREMENTS.Where(m => m.STATION.LOCATION.NAME.Equals(locationName)
                                         && m.TYPE.Equals(typeStr)
                                         && m.TIME < fromDate
@@ -209,6 +152,41 @@ namespace MeasurementService
             databaseEntities.SaveChanges();
 
         }
+        public string TypeToString(int type)
+        {
+            string typeStr = "";
+            if (type == 1)
+            {
+                typeStr = "Humidity";
+            }
+            else if (type == 2)
+            {
+                typeStr = "Temperature";
+            }
+            return typeStr;
+        }
+        public List<MEASUREMENT> GetLimits(List<MEASUREMENT> measurement, int limitType, double limit)
+        {
+            List<MEASUREMENT> tempMeasure = new List<MEASUREMENT>();
+            foreach (MEASUREMENT m in measurement)
+            {
+                //Low Limit
+                if (limitType == 1 && (double)m.VALUE < limit)
+                {
+                    tempMeasure.Add(m);
+                }
+                //High limit
+                else if (limitType == 2 && (double)m.VALUE > limit)
+                {
+                    tempMeasure.Add(m);
+                }
+            }
+
+            return tempMeasure;
+        }
 
     }
+
+    
+
 }
